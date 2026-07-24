@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c1a1f" />
+  <title>Contigo en cada día</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c1a1f;
+      --bg-soft: #132a32;
+      --card: rgba(255, 255, 255, 0.06);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f4f0e8;
+      --muted: rgba(244, 240, 232, 0.62);
+      --accent: #ff7a45;
+      --accent-2: #2ec4b6;
+      --gold: #f0c75e;
+      --locked: rgba(255, 255, 255, 0.28);
+      --ok: #5dde8a;
+      --danger: #ff8f7a;
+      --radius: 1rem;
+      --safe-top: max(1rem, env(safe-area-inset-top));
+      --safe-bot: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse 90% 60% at 10% -10%, rgba(255, 122, 69, 0.22), transparent 55%),
+        radial-gradient(ellipse 80% 50% at 100% 20%, rgba(46, 196, 182, 0.16), transparent 50%),
+        radial-gradient(ellipse 70% 40% at 50% 100%, rgba(240, 199, 94, 0.08), transparent 45%),
+        var(--bg);
+      min-height: 100dvh;
+    }
+
+    button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
+
+    /* ─── Candado ─── */
+    #lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 122, 69, 0.18), transparent 60%),
+        var(--bg);
+      transition: opacity 0.6s, visibility 0.6s;
+    }
+
+    #lock-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .lock-card { width: min(100%, 340px); text-align: center; }
+
+    .lock-kicker {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 0.5rem;
+    }
+
+    .lock-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    .lock-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .pin-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      transition: 0.2s;
+    }
+
+    .pin-dot.filled {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(255, 122, 69, 0.5);
+    }
+
+    .lock-error {
+      min-height: 1.2rem;
+      font-size: 0.75rem;
+      color: var(--danger);
+      opacity: 0;
+      margin-bottom: 0.75rem;
+      transition: opacity 0.25s;
+    }
+
+    .lock-error.visible { opacity: 1; }
+
+    #lock-screen.shake .lock-card { animation: shake 0.45s ease; }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .numpad button {
+      aspect-ratio: 1.4;
+      border-radius: 0.85rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      font-size: 1.3rem;
+      transition: 0.15s;
+    }
+
+    .numpad button:active { transform: scale(0.95); background: rgba(255,255,255,0.12); }
+    .numpad .empty { visibility: hidden; pointer-events: none; }
+    .numpad .back { font-size: 0.85rem; color: var(--muted); }
+
+    body:not(.unlocked) #app { visibility: hidden; }
+
+    /* ─── App ─── */
+    #app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: var(--safe-top) 1.15rem calc(var(--safe-bot) + 1.5rem);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 1.25rem 0 1.5rem;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .hero .eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 0.45rem;
+    }
+
+    .hero h1 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(1.7rem, 6vw, 2.2rem);
+      font-weight: 500;
+      line-height: 1.15;
+      margin-bottom: 0.4rem;
+    }
+
+    .hero p { color: var(--muted); font-size: 0.95rem; }
+
+    .test-banner {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      margin: 0 0 0.85rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: 0.65rem;
+      background: rgba(240, 199, 94, 0.18);
+      border: 1px solid rgba(240, 199, 94, 0.4);
+      color: var(--gold);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    .test-banner strong { color: #fff6ea; }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 0.4rem 0;
+      background: linear-gradient(var(--bg) 70%, transparent);
+      backdrop-filter: blur(8px);
+    }
+
+    .tab {
+      padding: 0.55rem 0.25rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid transparent;
+      background: var(--card);
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-color: rgba(255, 122, 69, 0.45);
+      background: rgba(255, 122, 69, 0.15);
+    }
+
+    .panel { display: none; animation: fadeUp 0.45s ease both; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.15rem 1.1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .card h2 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    .card .desc {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin-bottom: 1rem;
+    }
+
+    .countdown-block {
+      text-align: center;
+      padding: 0.5rem 0 0.25rem;
+    }
+
+    .countdown-digits {
+      display: flex;
+      justify-content: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      margin: 0.85rem 0 0.35rem;
+    }
+
+    .digit {
+      min-width: 64px;
+      padding: 0.7rem 0.4rem;
+      border-radius: 0.75rem;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--line);
+    }
+
+    .digit strong {
+      display: block;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .digit span {
+      display: block;
+      margin-top: 0.3rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .status-pill {
+      display: inline-block;
+      margin-top: 0.65rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      background: rgba(46, 196, 182, 0.15);
+      color: var(--accent-2);
+      border: 1px solid rgba(46, 196, 182, 0.3);
+    }
+
+    .status-pill.warm {
+      background: rgba(255, 122, 69, 0.15);
+      color: var(--accent);
+      border-color: rgba(255, 122, 69, 0.35);
+    }
+
+    .locked-box {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      color: var(--locked);
+    }
+
+    .locked-box .icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      opacity: 0.7;
+    }
+
+    .locked-box p {
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .reveal-message {
+      font-family: 'Fraunces', Georgia, serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      line-height: 1.55;
+      text-align: center;
+      padding: 0.5rem 0.25rem 0.25rem;
+      color: #fff6ea;
+    }
+
+    .msg-today-label {
+      display: block;
+      text-align: center;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.65rem;
+    }
+
+    .msg-history {
+      margin-top: 1.1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .msg-history h3 {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.65rem;
+      font-weight: 500;
+    }
+
+    .msg-day {
+      padding: 0.7rem 0.75rem;
+      margin-bottom: 0.45rem;
+      border-radius: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--line);
+    }
+
+    .msg-day.locked {
+      opacity: 0.4;
+    }
+
+    .msg-day .when {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 0.3rem;
+    }
+
+    .msg-day p {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .msg-day.locked p {
+      color: var(--locked);
+      font-style: italic;
+    }
+
+    .day-block { margin-bottom: 1.1rem; }
+
+    .missions-group {
+      margin-bottom: 1.35rem;
+    }
+
+    .missions-group-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      margin: 0.35rem 0 0.35rem;
+    }
+
+    .missions-group-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin-bottom: 0.85rem;
+    }
+
+    .day-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .day-head h3 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .day-meta {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .mission {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.85rem 0.9rem;
+      margin-bottom: 0.45rem;
+      border-radius: 0.8rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--line);
+      cursor: default;
+    }
+
+    .mission strong {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--gold);
+    }
+
+    .mission span {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .album-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.55rem;
+    }
+
+    .album-grid figure {
+      margin: 0;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.25);
+      aspect-ratio: 1;
+      cursor: zoom-in;
+    }
+
+    .album-grid img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .album-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 1.5rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    #photo-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: rgba(8, 14, 18, 0.94);
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.35s;
+    }
+
+    #photo-lightbox.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #photo-lightbox img {
+      max-width: 96vw;
+      max-height: 80dvh;
+      object-fit: contain;
+      border-radius: 0.6rem;
+    }
+
+    #photo-lightbox .hint {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+    <div class="lock-card">
+      <p class="lock-kicker">solo para ti</p>
+      <h1 class="lock-title" id="lock-title">Día especial</h1>
+      <p class="lock-sub">Ingresa la clave</p>
+      <div class="pin-dots" aria-hidden="true">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+      <p class="lock-error" id="lock-error">Clave incorrecta</p>
+      <div class="numpad" id="numpad">
+        <button type="button" data-digit="1">1</button>
+        <button type="button" data-digit="2">2</button>
+        <button type="button" data-digit="3">3</button>
+        <button type="button" data-digit="4">4</button>
+        <button type="button" data-digit="5">5</button>
+        <button type="button" data-digit="6">6</button>
+        <button type="button" data-digit="7">7</button>
+        <button type="button" data-digit="8">8</button>
+        <button type="button" data-digit="9">9</button>
+        <span class="empty" aria-hidden="true"></span>
+        <button type="button" data-digit="0">0</button>
+        <button type="button" class="back" data-action="back" aria-label="Borrar">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" aria-hidden="true">
+    <header class="hero">
+      <div id="test-banner" class="test-banner" hidden></div>
+      <p class="eyebrow">30 jul · 2 ago · 16 ago · 2026</p>
+      <h1>Contigo<br />en cada día</h1>
+      <p>El Salvador, Hato Grande y tu cumpleaños</p>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button type="button" class="tab active" data-tab="viaje">Viaje</button>
+      <button type="button" class="tab" data-tab="cumple">Cumple</button>
+      <button type="button" class="tab" data-tab="misiones">Misiones</button>
+      <button type="button" class="tab" data-tab="album">Álbum</button>
+    </nav>
+
+    <section id="panel-viaje" class="panel active" role="tabpanel">
+      <div class="card">
+        <h2>Cuenta regresiva al viaje</h2>
+        <p class="desc">Salimos el 30 de julio. El Salvador nos espera.</p>
+        <div class="countdown-block" id="trip-countdown"></div>
+      </div>
+      <div class="card">
+        <h2>Mini itinerario</h2>
+        <p class="desc">
+          <strong>Día 1</strong> — Camino + Centro Histórico<br />
+          <strong>Día 2</strong> — Boquerón, Picnic House, Skydeck<br />
+          <strong>Día 3</strong> — Puerta del Diablo + La Libertad<br />
+          <strong>Día 4</strong> — Regreso a casa
+        </p>
+      </div>
+    </section>
+
+    <section id="panel-cumple" class="panel" role="tabpanel">
+      <div class="card">
+        <h2>Tu cumpleaños</h2>
+        <p class="desc">16 de agosto. El viaje fue el adelanto… este es tu día de verdad.</p>
+        <div class="countdown-block" id="bday-countdown"></div>
+      </div>
+      <div class="card" id="bday-message-card">
+        <h2>Mensajes especiales</h2>
+        <p class="desc" style="margin-bottom:1rem">Del 1 al 16 de agosto: un mensaje nuevo cada día.</p>
+        <div id="bday-message-area"></div>
+      </div>
+    </section>
+
+    <section id="panel-misiones" class="panel" role="tabpanel">
+      <div id="missions-root"></div>
+    </section>
+
+    <section id="panel-album" class="panel" role="tabpanel">
+      <div class="card">
+        <h2>Álbum secreto</h2>
+        <p class="desc">Las fotos del viaje viven aquí. Se abre cuando volvamos.</p>
+        <div id="album-area"></div>
+      </div>
+    </section>
+
+    <footer>hecho con cariño · solo para ti</footer>
+  </div>
+
+  <div id="photo-lightbox" aria-hidden="true">
+    <img id="lightbox-img" src="" alt="" />
+    <span class="hint">toca para cerrar</span>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════
+    //  Personaliza fechas, textos, misiones y fotos
+    // ═══════════════════════════════════════════
+    const CONFIG = {
+      clave: '1608',
+
+      // ── PRUEBA ──
+      // '2026-08-16' = ver TODO abierto
+      // null = fecha real (así debe quedar cuando se lo mandes)
+      fechaPrueba: null,
+
+      // Fechas en hora local (año-mes-día)
+      viajeInicio: '2026-07-30',
+      viajeFin: '2026-08-02',
+      albumDesde: '2026-08-03',
+      mensajeDesde: '2026-08-01', // primer mensaje diario
+      cumple: '2026-08-16',
+
+      // Un mensaje por día (1 → 16 ago). Edita el texto de cada uno.
+      mensajesDiarios: [
+        {
+          fecha: '2026-08-01',
+          titulo: '1 de agosto',
+          texto: 'Hoy empieza el mes de agosto y la cuenta hacia tu día. Gracias por este viaje y por estar aquí conmigo. Te quiero.'
+        },
+        {
+          fecha: '2026-08-02',
+          titulo: '2 de agosto',
+          texto: 'Aunque el viaje termine, lo nuestro sigue. Cada kilómetro valió la pena porque fue contigo.'
+        },
+        {
+          fecha: '2026-08-03',
+          titulo: '3 de agosto',
+          texto: 'Ya en casa, pero el corazón todavía en El Salvador… o mejor: todavía contigo.'
+        },
+        {
+          fecha: '2026-08-04',
+          titulo: '4 de agosto',
+          texto: 'Hoy te veo… y eso ya hace que el día valga la pena. Gracias por tu tiempo, tu risa y por estar aquí conmigo.'
+        },
+        {
+          fecha: '2026-08-05',
+          titulo: '5 de agosto',
+          texto: 'Me gusta amarte en lo simple: un mensaje, una risa, un “¿cómo estás?”. Gracias por ser parte de mi vida.'
+        },
+        {
+          fecha: '2026-08-06',
+          titulo: '6 de agosto',
+          texto: 'Faltan 10 días para ti… y yo ya estoy emocionado de celebrarte otra vez, pero con mucho cariño y respeto.'
+        },
+        {
+          fecha: '2026-08-07',
+          titulo: '7 de agosto',
+          texto: 'Gracias por tu risa y por elegir estar. Cada día que pasa, te quiero un poco más.'
+        },
+        {
+          fecha: '2026-08-08',
+          titulo: '8 de agosto',
+          texto: 'Si el mundo se midiera en momentos contigo, yo ya sería millonario. Faltan 8 días para tu día.'
+        },
+        {
+          fecha: '2026-08-09',
+          titulo: '9 de agosto',
+          texto: 'Una semana. Siete amaneceres y yo pensando en cómo decirte, sin prisa, todo lo que mereces oír.'
+        },
+        {
+          fecha: '2026-08-10',
+          titulo: '10 de agosto',
+          texto: 'No necesito una fecha grande para quererte… pero el 16 sí quiero que sientas que este amor es tuyo, completo.'
+        },
+        {
+          fecha: '2026-08-11',
+          titulo: '11 de agosto',
+          texto: 'Cinco días para tu cumple… y hoy te veo. Qué suerte poder decirte de frente lo mucho que te quiero.'
+        },
+        {
+          fecha: '2026-08-12',
+          titulo: '12 de agosto',
+          texto: 'A veces pienso en lo fácil que se siente amarte. Como si el corazón ya te conociera de antes.'
+        },
+        {
+          fecha: '2026-08-13',
+          titulo: '13 de agosto',
+          texto: 'Tres días. Prepárate para sentirte celebrada: no por un regalo, sino porque existes y yo lo noto cada día.'
+        },
+        {
+          fecha: '2026-08-14',
+          titulo: '14 de agosto',
+          texto: 'Mañana casi es hoy. Gracias por ser mi novia, mi paz y mi mejor compañía. Te espero en tu día.'
+        },
+        {
+          fecha: '2026-08-15',
+          titulo: '15 de agosto · Hato Grande',
+          texto: 'Hoy camping en Hato Grande… cielo, monte, aire puro y tú. Mañana es tu día: qué bonito poder celebrarlo aquí, juntos, lejos del ruido.'
+        },
+        {
+          fecha: '2026-08-16',
+          titulo: '¡Feliz cumpleaños! · Hato Grande',
+          texto: 'Feliz cumpleaños, mi amor. Hoy te celebro a ti. Gracias por este viaje, por tu risa y por ser mi persona. Te amo.'
+        }
+      ],
+
+      // Álbum: después del viaje agrega rutas como 'fotos/dia1.jpg'
+      album: [
+        // { src: 'fotos/ejemplo1.jpg', caption: 'Día 1' },
+      ],
+
+      dias: [
+        {
+          id: 'd1',
+          grupo: 'viaje',
+          fecha: '2026-07-30',
+          titulo: 'Día 1 · Camino y llegada',
+          meta: '30 de julio',
+          misiones: [
+            {
+              id: 'd1-m1',
+              titulo: 'Primera foto',
+              detalle: 'Quiero una selfie contigo en el camino… aunque estemos cansados. Tú y yo, primer recuerdo del viaje.'
+            },
+            {
+              id: 'd1-m2',
+              titulo: 'Gracias por venir',
+              detalle: 'Hoy quiero decirte en voz alta: gracias por celebrar tu cumpleaños conmigo en este viaje.'
+            },
+            {
+              id: 'd1-m3',
+              titulo: 'Centro Histórico',
+              detalle: 'Elige conmigo un detalle bonito (plaza, iglesia o calle). Yo te diré: esto me recordará a nosotros.'
+            },
+            {
+              id: 'd1-m4',
+              titulo: 'Cierre de noche',
+              detalle: 'Antes de dormir, cuéntame una cosa que te gustó del día… y yo te cuento la mía.'
+            }
+          ]
+        },
+        {
+          id: 'd2',
+          grupo: 'viaje',
+          fecha: '2026-07-31',
+          titulo: 'Día 2 · Vistas',
+          meta: '31 de julio · Boquerón, Picnic House, Skydeck y mucho más',
+          misiones: [
+            {
+              id: 'd2-m1',
+              titulo: 'Boquerón',
+              detalle: 'Quiero una foto contigo mirando el paisaje. Y decirte al oído: juntos hasta el borde del mundo.'
+            },
+            {
+              id: 'd2-m2',
+              titulo: 'Picnic House',
+              detalle: 'Pidamos algo y lo compartimos… mitad y mitad, como compartimos nuestra vida entre nosotros.'
+            },
+            {
+              id: 'd2-m3',
+              titulo: 'Skydeck',
+              detalle: 'Si te animas: foto en el piso de vidrio y un abrazo largoooo, solo tuyo.'
+            },
+            {
+              id: 'd2-m4',
+              titulo: 'Cierre de noche',
+              detalle: 'Antes de dormir, dime qué fue lo mejor del día para ti. Yo te digo lo mío: estar contigo.'
+            }
+          ]
+        },
+        {
+          id: 'd3',
+          grupo: 'viaje',
+          fecha: '2026-08-01',
+          titulo: 'Día 3 · Mirador y costa',
+          meta: '1 de agosto · Puerta del Diablo + La Libertad',
+          misiones: [
+            {
+              id: 'd3-m1',
+              titulo: 'Puerta del Diablo',
+              detalle: 'Quiero una foto de nosotros de espalda, mirando el paisaje.'
+            },
+            {
+              id: 'd3-m2',
+              titulo: 'Malecón / muelle',
+              detalle: 'Camina conmigo de la mano unos minutos. Solo eso. Tú y yo.'
+            },
+            {
+              id: 'd3-m3',
+              titulo: 'Sunset Park',
+              detalle: 'Si hay atardecer, quiero una foto contigo mirando el sol. Este sol se pone… nosotros no.'
+            },
+            {
+              id: 'd3-m4',
+              titulo: 'El Tunco / El Sunzal',
+              detalle: 'Pies en la arena contigo. Dime un deseo para nosotros… yo también te digo el mío.'
+            },
+            {
+              id: 'd3-m5',
+              titulo: 'Souvenir nuestro',
+              detalle: 'Compremos algo pequeño que solo nosotros entendamos. Un pedacito del viaje para llevarnos.'
+            }
+          ]
+        },
+        {
+          id: 'd4',
+          grupo: 'viaje',
+          fecha: '2026-08-02',
+          titulo: 'Día 4 · Regreso',
+          meta: '2 de agosto',
+          misiones: [
+            {
+              id: 'd4-m1',
+              titulo: 'Momento favorito',
+              detalle: 'En el camino de vuelta, cuéntame tu momento favorito del viaje… yo te cuento el mío.'
+            },
+            {
+              id: 'd4-m2',
+              titulo: 'Cierre',
+              detalle: 'Quiero decirte: el viaje terminó… pero tu cumpleaños de verdad llega el 16, y yo estaré ahí.'
+            }
+          ]
+        },
+        {
+          id: 'd5',
+          grupo: 'camping',
+          fecha: '2026-08-15',
+          titulo: 'Camping · Hato Grande',
+          meta: '15 de agosto · Nicaragua',
+          misiones: [
+            {
+              id: 'd5-m1',
+              titulo: 'Llegada',
+              detalle: 'Al llegar a Hato Grande, quiero un abrazo tuyo: bienvenida al camping, bienvenida a estos días juntos.'
+            },
+            {
+              id: 'd5-m2',
+              titulo: 'Sin señal, con vos',
+              detalle: 'Tiempo para nosotros: mirando el paisaje contigo.'
+            },
+            {
+              id: 'd5-m3',
+              titulo: 'Atardecer',
+              detalle: 'Si el sol se pone, quiero una foto contigo… y decirte en voz baja algo que me encanta de ti.'
+            },
+            {
+              id: 'd5-m4',
+              titulo: 'Fogata / noche',
+              detalle: 'Bajo las estrellas, quiero contarte lo que más me gusta de ti.'
+            },
+            {
+              id: 'd5-m5',
+              titulo: 'Víspera',
+              detalle: 'Antes de dormir: mañana es tu día… y yo estoy feliz de vivirlo aquí contigo.'
+            }
+          ]
+        },
+        {
+          id: 'd6',
+          grupo: 'camping',
+          fecha: '2026-08-16',
+          titulo: 'Tu cumpleaños · Hato Grande',
+          meta: '16 de agosto · Nicaragua',
+          misiones: [
+            {
+              id: 'd6-m1',
+              titulo: 'Buenos días, cumpleañera',
+              detalle: 'Lo primero del día es para ti: feliz cumpleaños… y un beso, aunque aún tengamos sueño.'
+            },
+            {
+              id: 'd6-m2',
+              titulo: 'Desayuno en la naturaleza',
+              detalle: 'Quiero desayunar contigo como si fuera un banquete, aunque sea café, galleta o algo sencillo. Hoy eres la protagonista.'
+            },
+            {
+              id: 'd6-m3',
+              titulo: 'Foto del día',
+              detalle: 'Hagamos una foto que diga “cumpleaños en Hato Grande”. Quiero guardarla para el álbum… y para siempre.'
+            },
+            {
+              id: 'd6-m4',
+              titulo: 'Deseo en el bosque',
+              detalle: 'Dime un deseo al oído. Yo solo escucho, sonrío… y te abrazo.'
+            },
+            {
+              id: 'd6-m5',
+              titulo: 'Cierre del día',
+              detalle: 'Al final del día quiero decirte: hoy no celebramos el momento, el lugar o la fecha… te celebro a ti.'
+            }
+          ]
+        }
+      ]
+    };
+
+    const STORAGE_UNLOCK = 'sv_viaje_unlocked';
+
+    // ─── Utilidades de fecha ───
+    function parseDay(iso) {
+      const [y, m, d] = iso.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function startOfToday() {
+      if (CONFIG.fechaPrueba) {
+        return parseDay(CONFIG.fechaPrueba);
+      }
+      const n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+
+    function showTestBanner() {
+      const el = document.getElementById('test-banner');
+      if (!CONFIG.fechaPrueba || !el) return;
+      const d = parseDay(CONFIG.fechaPrueba);
+      const label = d.toLocaleDateString('es-ES', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+      el.hidden = false;
+      el.innerHTML = `Modo prueba · simulando <strong>${label}</strong><br/>Pon <code>fechaPrueba: null</code> antes de publicar`;
+    }
+
+    function daysBetween(a, b) {
+      return Math.round((b - a) / 86400000);
+    }
+
+    function isUnlockedDay(iso) {
+      return startOfToday() >= parseDay(iso);
+    }
+
+    function diffParts(targetIso) {
+      const now = new Date();
+      const target = parseDay(targetIso);
+      // fin del día objetivo a las 00:00 → countdown hasta esa mañana
+      let ms = target - now;
+      const past = ms <= 0;
+      if (past) ms = Math.abs(ms);
+
+      const totalSec = Math.floor(ms / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      return { past, days, hours, mins, secs };
+    }
+
+    function renderCountdown(el, targetIso, labels) {
+      const p = diffParts(targetIso);
+      if (p.past && labels.done) {
+        el.innerHTML = `<span class="status-pill warm">${labels.done}</span>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="countdown-digits">
+          <div class="digit"><strong>${p.days}</strong><span>días</span></div>
+          <div class="digit"><strong>${String(p.hours).padStart(2,'0')}</strong><span>hrs</span></div>
+          <div class="digit"><strong>${String(p.mins).padStart(2,'0')}</strong><span>min</span></div>
+          <div class="digit"><strong>${String(p.secs).padStart(2,'0')}</strong><span>seg</span></div>
+        </div>
+        <span class="status-pill">${labels.waiting}</span>
+      `;
+    }
+
+    // ─── Candado ───
+    const lockScreen = document.getElementById('lock-screen');
+    const pinDots = document.querySelectorAll('.pin-dot');
+    const lockError = document.getElementById('lock-error');
+    const app = document.getElementById('app');
+    let pinInput = '';
+
+    function unlockApp() {
+      localStorage.setItem(STORAGE_UNLOCK, '1');
+      document.body.classList.add('unlocked');
+      lockScreen.classList.add('hidden');
+      app.removeAttribute('aria-hidden');
+    }
+
+    if (localStorage.getItem(STORAGE_UNLOCK) === '1') unlockApp();
+
+    function updateDots() {
+      pinDots.forEach((dot, i) => dot.classList.toggle('filled', i < pinInput.length));
+    }
+
+    function showPinError() {
+      lockError.classList.add('visible');
+      lockScreen.classList.add('shake');
+      pinInput = '';
+      updateDots();
+      setTimeout(() => lockScreen.classList.remove('shake'), 450);
+      setTimeout(() => lockError.classList.remove('visible'), 2000);
+    }
+
+    function addDigit(d) {
+      if (pinInput.length >= 4) return;
+      pinInput += d;
+      updateDots();
+      if (pinInput.length === 4) {
+        setTimeout(() => {
+          if (pinInput === CONFIG.clave) unlockApp();
+          else showPinError();
+        }, 160);
+      }
+    }
+
+    document.getElementById('numpad').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      if (btn.dataset.action === 'back') {
+        pinInput = pinInput.slice(0, -1);
+        updateDots();
+        return;
+      }
+      if (btn.dataset.digit !== undefined) addDigit(btn.dataset.digit);
+    });
+
+    // ─── Tabs ───
+    document.querySelectorAll('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ─── Contadores ───
+    const tripEl = document.getElementById('trip-countdown');
+    const bdayEl = document.getElementById('bday-countdown');
+    const bdayMsg = document.getElementById('bday-message-area');
+
+    function updateCountdowns() {
+      const today = startOfToday();
+      const tripStart = parseDay(CONFIG.viajeInicio);
+      const tripEnd = parseDay(CONFIG.viajeFin);
+
+      if (today < tripStart) {
+        renderCountdown(tripEl, CONFIG.viajeInicio, {
+          waiting: 'Falta para salir',
+          done: ''
+        });
+      } else if (today <= tripEnd) {
+        tripEl.innerHTML = `<span class="status-pill warm">¡Estamos de viaje!</span>
+          <p class="desc" style="margin-top:0.85rem;margin-bottom:0">Hoy toca vivir las misiones del día… contigo.</p>`;
+      } else {
+        tripEl.innerHTML = `<span class="status-pill">Viaje cumplido · gracias por esos días</span>`;
+      }
+
+      if (today < parseDay(CONFIG.cumple)) {
+        renderCountdown(bdayEl, CONFIG.cumple, {
+          waiting: 'Falta para tu cumpleaños',
+          done: ''
+        });
+      } else if (daysBetween(parseDay(CONFIG.cumple), today) === 0) {
+        bdayEl.innerHTML = `<span class="status-pill warm">¡Hoy es tu día!</span>`;
+      } else {
+        bdayEl.innerHTML = `<span class="status-pill">Ya celebramos tu día · te amo</span>`;
+      }
+
+      // Mensajes diarios del 6 al 16
+      const msgs = CONFIG.mensajesDiarios || [];
+      const firstMsg = parseDay(CONFIG.mensajeDesde);
+      const todayMsg = msgs.find((m) => daysBetween(parseDay(m.fecha), today) === 0);
+      const unlocked = msgs.filter((m) => today >= parseDay(m.fecha));
+      const locked = msgs.filter((m) => today < parseDay(m.fecha));
+
+      if (today < firstMsg) {
+        const faltan = daysBetween(today, firstMsg);
+        bdayMsg.innerHTML = `
+          <div class="locked-box">
+            <div class="icon">🔒</div>
+            <p>Aquí habrá un mensaje nuevo cada día<br/>del <strong>1 al 16 de agosto</strong>.<br/>Faltan ${faltan} día${faltan === 1 ? '' : 's'} para el primero.</p>
+          </div>`;
+      } else {
+        const todayBlock = todayMsg
+          ? `<span class="msg-today-label">${todayMsg.titulo} · mensaje de hoy</span>
+             <p class="reveal-message">${todayMsg.texto}</p>`
+          : `<p class="reveal-message">Hoy no hay mensaje nuevo… pero puedes leer los anteriores.</p>`;
+
+        const history = unlocked.length || locked.length
+          ? `<div class="msg-history">
+              <h3>Todos los mensajes</h3>
+              ${unlocked.slice().reverse().map((m) => `
+                <div class="msg-day">
+                  <span class="when">${m.titulo}</span>
+                  <p>${m.texto}</p>
+                </div>`).join('')}
+              ${locked.map((m) => `
+                <div class="msg-day locked">
+                  <span class="when">${m.titulo}</span>
+                  <p>🔒 Aún no disponible</p>
+                </div>`).join('')}
+            </div>`
+          : '';
+
+        bdayMsg.innerHTML = todayBlock + history;
+      }
+    }
+
+
+    // ─── Misiones (solo lectura, sin checks) ───
+    function renderDayCard(dia) {
+      const open = isUnlockedDay(dia.fecha);
+      const list = dia.misiones.map((m) => `
+        <div class="mission">
+          <strong>${m.titulo}</strong>
+          <span>${m.detalle}</span>
+        </div>`).join('');
+
+      return `
+        <div class="card day-block">
+          <div class="day-head">
+            <div>
+              <h3>${dia.titulo}</h3>
+              <p class="day-meta">${dia.meta}${open ? '' : ' · bloqueado'}</p>
+            </div>
+          </div>
+          ${open ? list : `
+            <div class="locked-box">
+              <div class="icon">🔒</div>
+              <p>Se desbloquea el ${dia.meta}.</p>
+            </div>`}
+        </div>`;
+    }
+
+    function renderMissions() {
+      const root = document.getElementById('missions-root');
+      const viaje = CONFIG.dias.filter((d) => d.grupo === 'viaje');
+      const camping = CONFIG.dias.filter((d) => d.grupo === 'camping');
+
+      root.innerHTML = `
+        <div class="missions-group">
+          <div class="card">
+            <h2 class="missions-group-title">Misiones · El Salvador</h2>
+            <p class="missions-group-desc">Del 30 de julio al 2 de agosto. Cositas que quiero vivir contigo en el viaje.</p>
+          </div>
+          ${viaje.map(renderDayCard).join('')}
+        </div>
+        <div class="missions-group">
+          <div class="card">
+            <h2 class="missions-group-title">Misiones · Hato Grande</h2>
+            <p class="missions-group-desc">15 y 16 de agosto. Camping y tu cumpleaños en Nicaragua.</p>
+          </div>
+          ${camping.map(renderDayCard).join('')}
+        </div>`;
+    }
+
+    // ─── Álbum ───
+    const lightbox = document.getElementById('photo-lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+
+    function renderAlbum() {
+      const area = document.getElementById('album-area');
+      if (!isUnlockedDay(CONFIG.albumDesde)) {
+        const faltan = Math.max(0, daysBetween(startOfToday(), parseDay(CONFIG.albumDesde)));
+        area.innerHTML = `
+          <div class="locked-box">
+            <div class="icon">🔒</div>
+            <p>El álbum se abre el <strong>3 de agosto</strong>, cuando volvamos.<br/>Faltan ${faltan} día${faltan === 1 ? '' : 's'}.</p>
+          </div>`;
+        return;
+      }
+
+      if (!CONFIG.album.length) {
+        area.innerHTML = `
+          <div class="album-empty">
+            El álbum ya está abierto.<br/>
+            Pronto aparecerán aquí las fotos del viaje.
+          </div>`;
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="album-grid">
+          ${CONFIG.album.map((f, i) => `
+            <figure data-src="${f.src}" title="${f.caption || ''}">
+              <img src="${f.src}" alt="${f.caption || 'Foto ' + (i + 1)}" loading="lazy" />
+            </figure>
+          `).join('')}
+        </div>`;
+
+      area.querySelectorAll('figure').forEach((fig) => {
+        fig.addEventListener('click', () => {
+          lightboxImg.src = fig.dataset.src;
+          lightbox.classList.add('visible');
+        });
+      });
+    }
+
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.remove('visible');
+      lightboxImg.removeAttribute('src');
+    });
+
+    showTestBanner();
+    updateCountdowns();
+    renderMissions();
+    renderAlbum();
+    setInterval(updateCountdowns, 1000);
+  </script>
+</body>
+</html>
