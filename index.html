@@ -590,7 +590,7 @@
       <div id="test-banner" class="test-banner" hidden></div>
       <p class="eyebrow">30 jul · 2 ago · 16 ago · 2026</p>
       <h1>Contigo<br />en cada día</h1>
-      <p>El Salvador, Hato Grande y tu cumpleaños</p>
+      <p>El Salvador y tu cumpleaños</p>
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Secciones">
@@ -729,7 +729,7 @@
         {
           fecha: '2026-08-12',
           titulo: '12 de agosto',
-          texto: 'A veces pienso en lo fácil que se siente amarte. Como si el corazón ya te conociera de antes.'
+          texto: 'Estos días no han sido fáciles… y aun así, es lindo amarte. Es lindo querernos, incluso cuando no todo es alegría. Yo creo en nosotros y en el futuro maravilloso que todavía tenemos por delante. Te elijo también en los días difíciles.'
         },
         {
           fecha: '2026-08-13',
@@ -739,17 +739,17 @@
         {
           fecha: '2026-08-14',
           titulo: '14 de agosto',
-          texto: 'Mañana casi es hoy. Gracias por ser mi novia, mi paz y mi mejor compañía. Te espero en tu día.'
+          texto: 'Faltan dos días para tu cumpleaños. Gracias por ser mi novia, mi paz y mi mejor compañía. Ya casi es tu día… y yo estoy emocionado de celebrarte.'
         },
         {
           fecha: '2026-08-15',
-          titulo: '15 de agosto · Hato Grande',
-          texto: 'Hoy camping en Hato Grande… cielo, monte, aire puro y tú. Mañana es tu día: qué bonito poder celebrarlo aquí, juntos, lejos del ruido.'
+          titulo: '15 de agosto',
+          texto: 'Mañana es tu día. Aunque los planes cambien, lo que no cambia es esto: quiero celebrarte, a ti, con todo el cariño del mundo.'
         },
         {
           fecha: '2026-08-16',
-          titulo: '¡Feliz cumpleaños! · Hato Grande',
-          texto: 'Feliz cumpleaños, mi amor. Hoy te celebro a ti. Gracias por este viaje, por tu risa y por ser mi persona. Te amo.'
+          titulo: '¡Feliz cumpleaños!',
+          texto: 'Buenos días! Feliz cumpleaños, mi amor. Hoy celebro tu nacimiento… y que formes parte de mi vida. Gracias por tu risa, tu paciencia, tu escucha y por ser mi chica, mi novia, mi compañera, mi amiga. Mi todo. Te amo.'
         }
       ],
 
@@ -867,74 +867,6 @@
               id: 'd4-m2',
               titulo: 'Cierre',
               detalle: 'Quiero decirte: el viaje terminó… pero tu cumpleaños de verdad llega el 16, y yo estaré ahí.'
-            }
-          ]
-        },
-        {
-          id: 'd5',
-          grupo: 'camping',
-          fecha: '2026-08-15',
-          titulo: 'Camping · Hato Grande',
-          meta: '15 de agosto · Nicaragua',
-          misiones: [
-            {
-              id: 'd5-m1',
-              titulo: 'Llegada',
-              detalle: 'Al llegar a Hato Grande, quiero un abrazo tuyo: bienvenida al camping, bienvenida a estos días juntos.'
-            },
-            {
-              id: 'd5-m2',
-              titulo: 'Sin señal, con vos',
-              detalle: 'Tiempo para nosotros: mirando el paisaje contigo.'
-            },
-            {
-              id: 'd5-m3',
-              titulo: 'Atardecer',
-              detalle: 'Si el sol se pone, quiero una foto contigo… y decirte en voz baja algo que me encanta de ti.'
-            },
-            {
-              id: 'd5-m4',
-              titulo: 'Fogata / noche',
-              detalle: 'Bajo las estrellas, quiero contarte lo que más me gusta de ti.'
-            },
-            {
-              id: 'd5-m5',
-              titulo: 'Víspera',
-              detalle: 'Antes de dormir: mañana es tu día… y yo estoy feliz de vivirlo aquí contigo.'
-            }
-          ]
-        },
-        {
-          id: 'd6',
-          grupo: 'camping',
-          fecha: '2026-08-16',
-          titulo: 'Tu cumpleaños · Hato Grande',
-          meta: '16 de agosto · Nicaragua',
-          misiones: [
-            {
-              id: 'd6-m1',
-              titulo: 'Buenos días, cumpleañera',
-              detalle: 'Lo primero del día es para ti: feliz cumpleaños… y un beso, aunque aún tengamos sueño.'
-            },
-            {
-              id: 'd6-m2',
-              titulo: 'Desayuno en la naturaleza',
-              detalle: 'Quiero desayunar contigo como si fuera un banquete, aunque sea café, galleta o algo sencillo. Hoy eres la protagonista.'
-            },
-            {
-              id: 'd6-m3',
-              titulo: 'Foto del día',
-              detalle: 'Hagamos una foto que diga “cumpleaños en Hato Grande”. Quiero guardarla para el álbum… y para siempre.'
-            },
-            {
-              id: 'd6-m4',
-              titulo: 'Deseo en el bosque',
-              detalle: 'Dime un deseo al oído. Yo solo escucho, sonrío… y te abrazo.'
-            },
-            {
-              id: 'd6-m5',
-              titulo: 'Cierre del día',
-              detalle: 'Al final del día quiero decirte: hoy no celebramos el momento, el lugar o la fecha… te celebro a ti.'
             }
           ]
         }
@@ -1173,7 +1105,6 @@
     function renderMissions() {
       const root = document.getElementById('missions-root');
       const viaje = CONFIG.dias.filter((d) => d.grupo === 'viaje');
-      const camping = CONFIG.dias.filter((d) => d.grupo === 'camping');
 
       root.innerHTML = `
         <div class="missions-group">
@@ -1182,13 +1113,6 @@
             <p class="missions-group-desc">Del 30 de julio al 2 de agosto. Cositas que quiero vivir contigo en el viaje.</p>
           </div>
           ${viaje.map(renderDayCard).join('')}
-        </div>
-        <div class="missions-group">
-          <div class="card">
-            <h2 class="missions-group-title">Misiones · Hato Grande</h2>
-            <p class="missions-group-desc">15 y 16 de agosto. Camping y tu cumpleaños en Nicaragua.</p>
-          </div>
-          ${camping.map(renderDayCard).join('')}
         </div>`;
     }
 
